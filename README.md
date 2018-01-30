@@ -20,4 +20,7 @@ Roadmap
 -------
 
 - [x] Obtain Dataset + Prep supports
-- [ ] Build simple RNN based system
+- [x] Build simple RNN (SRNN) based system
+- [ ] Train SRNN model
+- [ ] Evaluate SRNN model
+- [ ] Set up demo for SRNN model
