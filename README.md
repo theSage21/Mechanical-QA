@@ -1,7 +1,2 @@
-# capsnet-qa
-Exploring Capsule network based QA systems
-
-Todo
-----
-
-- [ ] Dataset prep
+# Machine-QA
+Systems for Automated Context Based Question answering.
