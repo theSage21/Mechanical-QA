@@ -14,3 +14,10 @@ Command | What it does
 `make datasets` | Gets all datasets.
 `make squad` | Gets the [SQuAD dataset files](https://rajpurkar.github.io/SQuAD-explorer/)
 . | .
+
+
+Roadmap
+-------
+
+- [x] Obtain Dataset + Prep supports
+- [ ] Build simple RNN based system
