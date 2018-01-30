@@ -1,10 +1,10 @@
 import tensorflow as tf
-from .utils import birnn, dense
+from .utils import birnn, dense, make_glove
 
 
 def build_simple_rnn(*, batch_size, max_c_len, max_q_len,
                      glove_dim, summary_dim, reasoning_dim,
-                     build_loss=True):
+                     build_trainer=True):
     with tf.variable_scope("placeholders"):
         c_glove = tf.placeholder(name="c_glove",
                                  shape=(batch_size,
@@ -50,4 +50,35 @@ def build_simple_rnn(*, batch_size, max_c_len, max_q_len,
                 "start_exp": start_exp, "end_exp": end_exp,
                 "c_len": c_len, "q_len": q_len}
     out_dict = {"start_pred": start_pred, "end_pred": end_pred}
+    if build_trainer:
+        with tf.variable_scope("trainer"):
+            sl = tf.nn.softmax_cross_entropy_with_logits(logits=start_pred,
+                                                         labels=start_exp)
+            el = tf.nn.softmax_cross_entropy_with_logits(logits=end_pred,
+                                                         labels=end_exp)
+            loss = tf.reduce_mean(sl + el)
+            train = tf.train.AdamOptimizer().minimize(loss)
+        out_dict['loss'] = loss
+        out_dict['trainer'] = train
     return inp_dict, out_dict
+
+
+def data_feed(dataset, batch_size, glove,
+              max_c_len, max_q_len,
+              glove_dim):
+    while True:
+        df = dataset.sample(dataset.shape[0]).copy()
+        for i in range(0, df.shape[0]//batch_size, batch_size):
+            part = df[i: i + batch_size]
+            c_glove, c_len = make_glove(part['c_tokens'],
+                                        max_c_len,
+                                        glove, glove_dim)
+            q_glove, q_len = make_glove(part['q_tokens'],
+                                        max_q_len,
+                                        glove, glove_dim)
+            start_exp = part['start_exp_one_hot']
+            end_exp = part['end_exp_one_hot']
+            feed = {"c_glove": c_glove, "q_glove": q_glove,
+                    "start_exp": start_exp, "end_exp": end_exp,
+                    "c_len": c_len, "q_len": q_len}
+            yield feed

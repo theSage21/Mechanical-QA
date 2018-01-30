@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 
@@ -28,3 +29,20 @@ def dense(inp, hid_dim, scope):
         b1 = tf.get_variable('b1', shape=(hid_dim, ), dtype=tf.float32)
         o = tf.matmul(inp, w1) + b1
     return o
+
+
+def embed(sequence, table, default):
+    return [table.get(i, default) for i in sequence]
+
+
+def pad(sequence, length, pad):
+    return sequence[:length] + [pad] * (length - len(sequence[:length]))
+
+
+def make_glove(sequences, maxlen, glove, glovedim):
+    gloves, lens = [], []
+    for seq in sequences:
+        gloves.append(embed(pad(seq, maxlen, '<<PADDING>>'),
+                            glove, [0] * glovedim))
+        lens.append(min(len(seq), maxlen))
+    return np.array(gloves), np.array(lens)
