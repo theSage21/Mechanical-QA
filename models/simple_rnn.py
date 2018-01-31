@@ -1,10 +1,10 @@
 import tensorflow as tf
-from .utils import birnn, dense, make_glove
+from .utils import birnn, dense, make_glove, ohe
 
 
-def build_simple_rnn(*, batch_size, max_c_len, max_q_len,
-                     glove_dim, summary_dim, reasoning_dim,
-                     build_trainer=True):
+def build(*, batch_size, max_c_len, max_q_len,
+          glove_dim, summary_dim, reasoning_dim,
+          build_trainer=True, **other_kwargs):
     with tf.variable_scope("placeholders"):
         c_glove = tf.placeholder(name="c_glove",
                                  shape=(batch_size,
@@ -63,9 +63,9 @@ def build_simple_rnn(*, batch_size, max_c_len, max_q_len,
     return inp_dict, out_dict
 
 
-def data_feed(dataset, batch_size, glove,
-              max_c_len, max_q_len,
-              glove_dim):
+def feed_gen(dataset, *, batch_size, glove,
+             max_c_len, max_q_len,
+             glove_dim, **other_kwargs):
     while True:
         df = dataset.sample(dataset.shape[0]).copy()
         for i in range(0, df.shape[0]//batch_size, batch_size):
@@ -76,9 +76,26 @@ def data_feed(dataset, batch_size, glove,
             q_glove, q_len = make_glove(part['q_tokens'],
                                         max_q_len,
                                         glove, glove_dim)
-            start_exp = part['start_exp_one_hot']
-            end_exp = part['end_exp_one_hot']
+            start_exp = [ohe(i, max_c_len) for i in part['start_exp_one_hot']]
+            end_exp = [ohe(i, max_c_len) for i in part['end_exp_one_hot']]
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
                     "c_len": c_len, "q_len": q_len}
             yield feed
+
+
+class Config:
+    def __init__(self):
+        self.max_epochs = 5000
+        self.train_steps = 50
+        self.dev_steps = 50
+        self.batch_size = 32
+        self.max_c_len = 300
+        self.max_q_len = 30
+        self.glove_dim = 50
+        self.summary_dim = 32
+        self.reasoning_dim = 32
+        self.build_trainer = True
+
+
+config = Config()

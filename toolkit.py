@@ -1,6 +1,10 @@
 import json
+import spacy
 import pandas as pd
 from tqdm import tqdm
+
+
+nlp = spacy.load('en')
 
 
 def standardize_squad(fname):
@@ -23,6 +27,36 @@ def standardize_squad(fname):
     df.columns = ['qid', 'docid', 'context', 'question', 'answer',
                   'start', 'end']
     return df
+
+
+def ohe(i, m):
+    v = [0] * m
+    if i < m:
+        v[i] = 1
+    return v
+
+
+def load_squad(fname):
+    df = standardize_squad(fname)
+    para_toks = {c: [i.text for i in nlp.tokenizer(c)]
+                 for c in tqdm(set(df['context']), desc=fname + ' Tok-C')}
+    df['c_tokens'] = df['context'].map(para_toks)
+    q_tokens = {q: [i.text for i in nlp.tokenizer(q)]
+                for q in tqdm(set(df['question']), desc=fname + ' Tok-Q')}
+    df['q_tokens'] = df['question'].map(q_tokens)
+    df['start_exp_one_hot'] = list(df['start'])
+    df['end_exp_one_hot'] = list(df['end'])
+    return df
+
+
+def load_glove(fname):
+    glove = {}
+    with open(fname, 'r') as fl:
+        for line in tqdm(fl.readlines(), desc='Load GloVe'):
+            w, v = line.split(' ', 1)
+            w = w.strip() if w.strip() else ' '
+            glove[w] = list(map(float, v.strip().split(' ')))
+    return glove
 
 
 if __name__ == '__main__':

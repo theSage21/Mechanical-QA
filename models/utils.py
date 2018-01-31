@@ -46,3 +46,10 @@ def make_glove(sequences, maxlen, glove, glovedim):
                             glove, [0] * glovedim))
         lens.append(min(len(seq), maxlen))
     return np.array(gloves), np.array(lens)
+
+
+def ohe(i, m):
+    v = [0] * m
+    if i < m:
+        v[i] = 1
+    return v
