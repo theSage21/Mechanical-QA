@@ -1,9 +1,11 @@
+import numpy as np
 import tensorflow as tf
-from .utils import birnn, dense, make_glove, ohe
+from ._utils import birnn, dense, make_glove, ohe
 
 
 def build(*, batch_size, max_c_len, max_q_len,
           glove_dim, summary_dim, reasoning_dim,
+          keep_proba, understanding_depth,
           build_trainer=True, **other_kwargs):
     with tf.variable_scope("placeholders"):
         c_glove = tf.placeholder(name="c_glove",
@@ -34,11 +36,13 @@ def build(*, batch_size, max_c_len, max_q_len,
         _, c_s = birnn(c_glove, c_len, summary_dim, 'context_summary')
         _, q_s = birnn(q_glove, q_len, summary_dim, 'question_summary')
         summaries = tf.concat([*c_s, *q_s], axis=-1)
+        summaries = tf.nn.dropout(summaries, keep_proba)
     with tf.variable_scope("reasoning"):
         understand = summaries
-        for i in range(3):
-            understand = tf.nn.tanh(dense(understand, reasoning_dim,
+        for i in range(understanding_depth):
+            understand = tf.nn.relu(dense(understand, reasoning_dim,
                                           'reason_'+str(i)))
+            understand = tf.nn.dropout(understand, keep_proba)
     with tf.variable_scope("boundary_prediction"):
         start_pred = tf.nn.relu(dense(understand, max_c_len, 'start'))
         end_pred = tf.nn.relu(dense(understand, max_c_len, 'end'))
@@ -81,6 +85,7 @@ def feed_gen(dataset, *, batch_size, glove,
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
                     "c_len": c_len, "q_len": q_len}
+            feed = {k: np.array(v) for k, v in feed.items()}
             yield feed
 
 
@@ -89,13 +94,15 @@ class Config:
         self.max_epochs = 5000
         self.train_steps = 50
         self.dev_steps = 50
-        self.batch_size = 32
+        self.batch_size = 15
         self.max_c_len = 300
         self.max_q_len = 30
         self.glove_dim = 50
-        self.summary_dim = 32
-        self.reasoning_dim = 32
+        self.summary_dim = 64
+        self.reasoning_dim = 64
         self.build_trainer = True
+        self.keep_proba = 0.75
+        self.understanding_depth = 5
 
 
 config = Config()

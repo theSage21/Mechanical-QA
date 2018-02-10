@@ -11,7 +11,17 @@ Command | What it does
 `make glove` | Gets [GloVe zip file](https://nlp.stanford.edu/projects/glove/)
 `make datasets` | Gets all datasets.
 `make squad` | Gets the [SQuAD dataset files](https://rajpurkar.github.io/SQuAD-explorer/)
-`python train.py` | Train a model. Edit imports to train a specific model
+`python train.py --model simple_rnn` | Train a model.
+`python train.py --help` | Display arguments.
+
+
+To add a new model simply place it in the models folder. The name is the name of the file. This file must define 3 things.
+
+1. `build` is a function which is provided the Config and must return two dictionaries `input` and `output`
+2. `feed_gen` is an infinite generator which is provided the dataframe and the config as key word arguments.
+3. `config` must be an object which contains all config variables for the model
+
+See [simple_rnn](models/simple_rnn.py) for an example.
 
 
 Roadmap
