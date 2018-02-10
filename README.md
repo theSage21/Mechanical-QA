@@ -37,7 +37,6 @@ Roadmap
 - [x] Evaluate SRNN model
 - [ ] Set up demo for SRNN model
 - [ ] Add other models
-    - [ ] [MatchLSTM](https://arxiv.org/abs/1608.07905)
     - [ ] [FastQA](https://arxiv.org/abs/1703.04816)
     - [ ] [FusionNet](https://arxiv.org/abs/1711.07341)
 
