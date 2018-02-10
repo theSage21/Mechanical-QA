@@ -15,6 +15,8 @@ Command | What it does
 `make squad` | Gets the [SQuAD dataset files](https://rajpurkar.github.io/SQuAD-explorer/)
 `python train.py --model simple_rnn` | Train a model.
 `python train.py --help` | Display arguments.
+`python measure.py --model simple_rnn --checkpoint logs/simple-rnn-64` | Evaluates the model against the SQuAD official dev dataset
+`tensorboard --logdir logs` | You can monitor training sessions from here.
 
 
 To add a new model simply place it in the models folder. The name is the name of the file. This file must define 3 things.
@@ -35,6 +37,9 @@ Roadmap
 - [x] Evaluate SRNN model
 - [ ] Set up demo for SRNN model
 - [ ] Add other models
+    - [ ] [MatchLSTM](https://arxiv.org/abs/1608.07905)
+    - [ ] [FastQA](https://arxiv.org/abs/1703.04816)
+    - [ ] [FusionNet](https://arxiv.org/abs/1711.07341)
 
 
 Performance
