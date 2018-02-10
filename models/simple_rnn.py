@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from ._utils import birnn, dense, make_glove, ohe
 
@@ -69,11 +70,13 @@ def build(*, batch_size, max_c_len, max_q_len,
 
 def feed_gen(dataset, *, batch_size, glove,
              max_c_len, max_q_len,
-             glove_dim, **other_kwargs):
+             glove_dim, infinite=True, **other_kwargs):
     while True:
         df = dataset.sample(dataset.shape[0]).copy()
-        for i in range(0, df.shape[0]//batch_size, batch_size):
-            part = df[i: i + batch_size]
+        for i in range(0, df.shape[0], batch_size):
+            part = df[i: i + batch_size].copy()
+            while part.shape[0] != batch_size:
+                part = pd.concat([part, part])[:batch_size]
             c_glove, c_len = make_glove(part['c_tokens'],
                                         max_c_len,
                                         glove, glove_dim)
@@ -84,9 +87,12 @@ def feed_gen(dataset, *, batch_size, glove,
             end_exp = [ohe(i, max_c_len) for i in part['end_exp_one_hot']]
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
-                    "c_len": c_len, "q_len": q_len}
+                    "c_len": c_len, "q_len": q_len,
+                    'qid': part['qid'], 'c_tokens': part['c_tokens']}
             feed = {k: np.array(v) for k, v in feed.items()}
             yield feed
+        if not infinite:
+            break
 
 
 class Config:
@@ -94,15 +100,15 @@ class Config:
         self.max_epochs = 5000
         self.train_steps = 50
         self.dev_steps = 50
-        self.batch_size = 15
+        self.batch_size = 64
         self.max_c_len = 300
         self.max_q_len = 30
         self.glove_dim = 50
         self.summary_dim = 64
         self.reasoning_dim = 64
         self.build_trainer = True
-        self.keep_proba = 0.75
-        self.understanding_depth = 5
+        self.keep_proba = 0.9
+        self.understanding_depth = 2
 
 
 config = Config()

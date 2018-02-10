@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorboardX import SummaryWriter
 from toolkit import load_squad, load_glove
 
-desc = 'Trainer for Machien QA'
+desc = 'Trainer for Machine QA'
 parser = argparse.ArgumentParser(description=desc)
 parser.add_argument('--model', action='store',
                     help='What model to train?')

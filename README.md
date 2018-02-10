@@ -32,5 +32,14 @@ Roadmap
 - [x] Obtain Dataset + Prep supports
 - [x] Build simple RNN (SRNN) based system
 - [x] Train SRNN model
-- [ ] Evaluate SRNN model
+- [x] Evaluate SRNN model
 - [ ] Set up demo for SRNN model
+- [ ] Add other models
+
+
+Performance
+-----------
+
+Date Time                      | Model                | F1         | em
+-------------------------------|----------------------|------------|-----
+2018-02-10 16:08:34.660689     | logs/simple_rnn-64   | 6.8241152  | 0.1419111 

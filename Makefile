@@ -8,4 +8,5 @@ datafolder:
 squad: datafolder
 	test -e data/train-v1.1.json || wget -O data/train-v1.1.json https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
 	test -e data/dev-v1.1.json || wget -O data/dev-v1.1.json https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
+	test -e data/evalsquad.py  || wget -O data/evalsquad.py https://worksheets.codalab.org/rest/bundles/0xbcd57bee090b421c982906709c8c27e1/contents/blob/
 .PHONY: prereq glove datasets datafolder squad

@@ -1,5 +1,6 @@
 import json
 import spacy
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -57,6 +58,21 @@ def load_glove(fname):
             w = w.strip() if w.strip() else ' '
             glove[w] = list(map(float, v.strip().split(' ')))
     return glove
+
+
+def get_answer(s_prediction, e_prediction, batch):
+    "Given predictions get answers"
+    s_indices = np.argmax(s_prediction, axis=-1)
+    e_indices = np.argmax(e_prediction, axis=-1)
+    answers = {}
+    ids, contexts = batch['qid'], batch['c_tokens']
+    for id, con, s, e in zip(ids,
+                             contexts,
+                             s_indices,
+                             e_indices):
+        e = max(s, e)
+        answers[id] = ' '.join([str(i) for i in con[s:e+1]])
+    return answers
 
 
 if __name__ == '__main__':

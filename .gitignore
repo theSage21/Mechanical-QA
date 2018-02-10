@@ -3,3 +3,4 @@ logs/
 checkpoints/
 __pycache__/
 *pyc
+predict.json
