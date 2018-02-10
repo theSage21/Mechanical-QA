@@ -5,6 +5,8 @@ Systems for Automated Context Based Question answering.
 Usage
 -----
 
+Requirements can be installed with `pipenv install`.
+
 Command | What it does
 --------|------------
 `make prereq` | Gathers and sets up All requirements
