@@ -6,8 +6,9 @@ from ._utils import birnn, dense, make_glove, gen_fractional_steps
 
 def build(*, batch_size, max_c_len, max_q_len,
           glove_dim, summary_dim, reasoning_dim,
-          keep_proba, understanding_depth,
+          keep_proba,
           build_trainer=True, **other_kwargs):
+    print('Building BRAHMA model')
     with tf.variable_scope("placeholders"):
         c_glove = tf.placeholder(name="c_glove",
                                  shape=(batch_size,
@@ -84,8 +85,8 @@ def feed_gen(dataset, *, batch_size, glove,
             q_glove, q_len = make_glove(part['q_tokens'],
                                         max_q_len,
                                         glove, glove_dim)
-            start_exp = [i/l for i, l in zip(part['start_exp_one_hot'], c_len)]
-            end_exp = [i/l for i, l in zip(part['end_exp_one_hot'], c_len)]
+            start_exp = [[i/l] for i, l in zip(part['start_exp_one_hot'], c_len)]
+            end_exp = [[i/l] for i, l in zip(part['end_exp_one_hot'], c_len)]
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
                     "c_len": c_len, "q_len": q_len,
@@ -102,15 +103,14 @@ class Config:
         self.max_epochs = 5000
         self.train_steps = 50
         self.dev_steps = 50
-        self.batch_size = 64
-        self.max_c_len = 300
+        self.batch_size = 128
+        self.max_c_len = 400
         self.max_q_len = 30
         self.glove_dim = 50
-        self.summary_dim = 64
-        self.reasoning_dim = 64
+        self.summary_dim = 128
+        self.reasoning_dim = 128
         self.build_trainer = True
-        self.keep_proba = 0.9
-        self.understanding_depth = 2
+        self.keep_proba = 0.8
 
 
 config = Config()

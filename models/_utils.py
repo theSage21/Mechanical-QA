@@ -54,7 +54,8 @@ def ohe(i, m):
         v[i] = 1
     return v
 
+
 def gen_fractional_steps(lengths, max_lengths):
-    fractions = [pad([1/l]*l, max_lengths, 0)
+    fractions = [pad([[1/l]]*l, max_lengths, [0])
                  for l in lengths]
     return fractions

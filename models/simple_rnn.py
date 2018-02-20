@@ -8,6 +8,7 @@ def build(*, batch_size, max_c_len, max_q_len,
           glove_dim, summary_dim, reasoning_dim,
           keep_proba, understanding_depth,
           build_trainer=True, **other_kwargs):
+    print('Building SIMPLE_RNN model')
     with tf.variable_scope("placeholders"):
         c_glove = tf.placeholder(name="c_glove",
                                  shape=(batch_size,
