@@ -26,12 +26,10 @@ def build(*, batch_size, max_c_len, max_q_len,
                                         glove_dim),
                                  dtype=tf.float32)
         start_exp = tf.placeholder(name="start_exp",
-                                   shape=(batch_size,
-                                          1),
+                                   shape=(batch_size,),
                                    dtype=tf.float32)
         end_exp = tf.placeholder(name="end_exp",
-                                 shape=(batch_size,
-                                        1),
+                                 shape=(batch_size,),
                                  dtype=tf.float32)
         c_len = tf.placeholder(name='c_len',
                                shape=(batch_size,),
@@ -39,6 +37,8 @@ def build(*, batch_size, max_c_len, max_q_len,
         q_len = tf.placeholder(name='q_len',
                                shape=(batch_size,),
                                dtype=tf.int32)
+        start_exp_ = tf.expand_dims(start_exp, axis=-1)
+        end_exp_ = tf.expand_dims(end_exp, axis=-1)
     with tf.variable_scope("summaries"):
         inp = q_glove
         for x in range(1):
@@ -55,15 +55,19 @@ def build(*, batch_size, max_c_len, max_q_len,
                              'context_reasoning'+str(x))
         understand = tf.concat(c_s, axis=-1)
     with tf.variable_scope("boundary_prediction"):
-        start_pred = tf.nn.tanh(dense(understand, reasoning_dim, 'start1'))
-        start_pred = tf.nn.tanh(dense(start_pred, reasoning_dim, 'start2'))
+        start_pred = tf.nn.relu(dense(understand, reasoning_dim, 'start1'))
+        start_pred = tf.nn.relu(dense(start_pred, reasoning_dim, 'start2'))
         start_pred = tf.nn.sigmoid(dense(start_pred, 1, 'start'))
-        end_pred = tf.nn.tanh(dense(understand, reasoning_dim, 'end1'))
-        end_pred = tf.nn.tanh(dense(end_pred, reasoning_dim, 'end2'))
+        end_pred = tf.nn.relu(dense(understand, reasoning_dim, 'end1'))
+        end_pred = tf.nn.relu(dense(end_pred, reasoning_dim, 'end2'))
         end_pred = tf.nn.sigmoid(dense(end_pred, 1, 'end'))
         # masks for pointers
-        start_index = tf.floor(start_pred * tf.cast(tf.expand_dims(c_len, axis=-1), tf.float32))
-        end_index = tf.floor(end_pred * tf.cast(tf.expand_dims(c_len, axis=-1), tf.float32))
+        start_pred = start_pred * tf.cast(tf.expand_dims(c_len, axis=-1),
+                                          tf.float32)
+        end_pred = end_pred * tf.cast(tf.expand_dims(c_len, axis=-1),
+                                      tf.float32)
+        start_index = tf.floor(start_pred)
+        end_index = tf.floor(end_pred)
     inp_dict = {"c_glove": c_glove, "q_glove": q_glove,
                 "start_exp": start_exp, "end_exp": end_exp,
                 'c_steps': c_steps,
@@ -72,9 +76,9 @@ def build(*, batch_size, max_c_len, max_q_len,
                 "start_index": start_index, "end_index": end_index}
     if build_trainer:
         with tf.variable_scope("trainer"):
-            sl = tf.square((start_exp - start_pred))
-            el = tf.square((end_exp - end_pred))
-            loss = tf.reduce_mean(sl + el)
+            sl = tf.square((start_exp_ - start_pred))
+            el = tf.square((end_exp_ - end_pred))
+            loss = tf.reduce_mean(tf.sqrt(sl + el))
             train = tf.train.AdamOptimizer().minimize(loss)
         out_dict['loss'] = loss
         out_dict['trainer'] = train
@@ -97,8 +101,8 @@ def feed_gen(dataset, *, batch_size, glove,
             q_glove, q_len = make_glove(part['q_tokens'],
                                         max_q_len,
                                         glove, glove_dim)
-            start_exp = [[i/l] for i, l in zip(part['start'], c_len)]
-            end_exp = [[i/l] for i, l in zip(part['end'], c_len)]
+            start_exp = [i for i, l in zip(part['start'], c_len)]
+            end_exp = [i for i, l in zip(part['end'], c_len)]
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
                     "c_len": c_len, "q_len": q_len,
@@ -116,15 +120,13 @@ class Config:
         self.train_steps = 50
         self.dev_steps = 50
         self.batch_size = 128
-        self.max_c_len = 400
+        self.max_c_len = 350
         self.max_q_len = 30
         self.glove_dim = 50
-        self.summary_dim = 128
-        self.reasoning_dim = 128
+        self.summary_dim = 32
+        self.reasoning_dim = 32
         self.build_trainer = True
         self.keep_proba = 0.8
 
 
 config = Config()
-if __name__ == '__main__':
-    build(**config.__dict__)

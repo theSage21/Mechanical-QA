@@ -48,7 +48,7 @@ def load_squad(fname):
 
     def get_index(i, p):
         for index, item in enumerate(para_toks[p]):
-            if i >= item.idx:
+            if i <= (item.idx + len(item.text)):
                 return index
 
     df['start'] = [int(get_index(i, p))

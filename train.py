@@ -50,13 +50,16 @@ ModelName = os.path.join(args.logdir, ModelName)
 
 train_df = load_squad(os.path.join(args.datadir, 'train-v1.1.json'))
 dev_df = load_squad(os.path.join(args.datadir, 'dev-v1.1.json'))
-train_df = train_df.loc[[i < config.max_c_len
-                         for i in train_df['start_exp_one_hot']]]
-dev_df = dev_df.loc[[i < config.max_c_len
-                     for i in dev_df['start_exp_one_hot']]]
+train_df = train_df.loc[[i <= config.max_c_len
+                         for i in train_df['end']]]
+dev_df = dev_df.loc[[i <= config.max_c_len
+                     for i in dev_df['end']]]
+
 glove = load_glove('data/glove.6B.50d.txt')
 
 inp_dict, out_dict = build(**config.__dict__)
+print(train_df.shape[0], 'training samples')
+print(dev_df.shape[0], 'validation samples')
 train_feed = feed_gen(train_df, glove=glove, **config.__dict__)
 dev_feed = feed_gen(dev_df, glove=glove, **config.__dict__)
 
