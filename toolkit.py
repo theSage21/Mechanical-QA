@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-nlp = spacy.load('en')
+nlp = spacy.blank('en')
 
 
 def standardize_squad(fname):
@@ -39,12 +39,20 @@ def ohe(i, m):
 
 def load_squad(fname):
     df = standardize_squad(fname)
-    para_toks = {c: [i.text for i in nlp.tokenizer(c)]
+    para_toks = {c: [i for i in nlp.tokenizer(c)]
                  for c in tqdm(set(df['context']), desc=fname + ' Tok-C')}
-    df['c_tokens'] = df['context'].map(para_toks)
-    q_tokens = {q: [i.text for i in nlp.tokenizer(q)]
+    df['c_tokens'] = df['context'].apply(lambda x: [i.text for i in para_toks[x]])
+    q_tokens = {q: [i for i in nlp.tokenizer(q)]
                 for q in tqdm(set(df['question']), desc=fname + ' Tok-Q')}
-    df['q_tokens'] = df['question'].map(q_tokens)
+    df['q_tokens'] = df['question'].apply(lambda x: [i.text for i in q_tokens[x]])
+
+    def get_index(i, p):
+        for index, item in enumerate(para_toks[p]):
+            if item.idx >= i:
+                return index
+
+    df['start'] = [get_index(i, p) for i, p in zip(df['start'], df['context'])]
+    df['end'] = [get_index(i, p) for i, p in zip(df['end'], df['context'])]
     df['start_exp_one_hot'] = list(df['start'])
     df['end_exp_one_hot'] = list(df['end'])
     return df

@@ -40,18 +40,27 @@ def build(*, batch_size, max_c_len, max_q_len,
                                shape=(batch_size,),
                                dtype=tf.int32)
     with tf.variable_scope("summaries"):
-        _, q_s = birnn(q_glove, q_len, summary_dim, 'question_summary')
+        inp = q_glove
+        for x in range(5):
+            inp, q_s = birnn(inp, q_len, summary_dim,
+                             'question_summary'+str(x))
         summaries = tf.concat(q_s, axis=-1)
         summaries = tf.nn.dropout(summaries, keep_proba)
         summaries = tf.tile(tf.expand_dims(summaries, axis=1),
                             [1, max_c_len, 1])
     with tf.variable_scope("reasoning"):
         rep = tf.concat([c_glove, summaries, c_steps], axis=-1)
-        _, c_s = birnn(rep, c_len, summary_dim, 'context_reasoning')
+        for x in range(5):
+            rep, c_s = birnn(rep, c_len, summary_dim,
+                             'context_reasoning'+str(x))
         understand = tf.concat(c_s, axis=-1)
     with tf.variable_scope("boundary_prediction"):
-        start_pred = tf.nn.sigmoid(dense(understand, 1, 'start'))
-        end_pred = tf.nn.sigmoid(dense(understand, 1, 'end'))
+        start_pred = tf.nn.tanh(dense(understand, reasoning_dim, 'start1'))
+        start_pred = tf.nn.tanh(dense(start_pred, reasoning_dim, 'start2'))
+        start_pred = tf.nn.sigmoid(dense(start_pred, 1, 'start'))
+        end_pred = tf.nn.tanh(dense(understand, reasoning_dim, 'end1'))
+        end_pred = tf.nn.tanh(dense(end_pred, reasoning_dim, 'end2'))
+        end_pred = tf.nn.sigmoid(dense(end_pred, 1, 'end'))
         # masks for pointers
     inp_dict = {"c_glove": c_glove, "q_glove": q_glove,
                 "start_exp": start_exp, "end_exp": end_exp,
@@ -60,8 +69,8 @@ def build(*, batch_size, max_c_len, max_q_len,
     out_dict = {"start_pred": start_pred, "end_pred": end_pred}
     if build_trainer:
         with tf.variable_scope("trainer"):
-            sl = tf.square(start_exp - start_pred)
-            el = tf.square(end_exp - end_pred)
+            sl = tf.square((start_exp - start_pred))
+            el = tf.square((end_exp - end_pred))
             loss = tf.reduce_mean(sl + el)
             train = tf.train.AdamOptimizer().minimize(loss)
         out_dict['loss'] = loss
@@ -85,8 +94,8 @@ def feed_gen(dataset, *, batch_size, glove,
             q_glove, q_len = make_glove(part['q_tokens'],
                                         max_q_len,
                                         glove, glove_dim)
-            start_exp = [[i/l] for i, l in zip(part['start_exp_one_hot'], c_len)]
-            end_exp = [[i/l] for i, l in zip(part['end_exp_one_hot'], c_len)]
+            start_exp = [[i/l] for i, l in zip(part['start'], c_len)]
+            end_exp = [[i/l] for i, l in zip(part['end'], c_len)]
             feed = {"c_glove": c_glove, "q_glove": q_glove,
                     "start_exp": start_exp, "end_exp": end_exp,
                     "c_len": c_len, "q_len": q_len,
@@ -114,3 +123,5 @@ class Config:
 
 
 config = Config()
+if __name__ == '__main__':
+    build(**config.__dict__)
