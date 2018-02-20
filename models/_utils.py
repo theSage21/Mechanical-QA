@@ -51,7 +51,8 @@ def make_glove(sequences, maxlen, glove, glovedim):
 def ohe(i, m):
     v = [0] * m
     if i < m:
-        v[i] = 1
+        assert int(i) == i, i
+        v[int(i)] = 1
     return v
 
 

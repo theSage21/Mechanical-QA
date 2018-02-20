@@ -48,11 +48,13 @@ def load_squad(fname):
 
     def get_index(i, p):
         for index, item in enumerate(para_toks[p]):
-            if item.idx >= i:
+            if i >= item.idx:
                 return index
 
-    df['start'] = [get_index(i, p) for i, p in zip(df['start'], df['context'])]
-    df['end'] = [get_index(i, p) for i, p in zip(df['end'], df['context'])]
+    df['start'] = [int(get_index(i, p))
+                   for i, p in zip(df['start'], df['context'])]
+    df['end'] = [int(get_index(i, p))
+                 for i, p in zip(df['end'], df['context'])]
     df['start_exp_one_hot'] = list(df['start'])
     df['end_exp_one_hot'] = list(df['end'])
     return df
@@ -70,15 +72,16 @@ def load_glove(fname):
 
 def get_answer(s_prediction, e_prediction, batch):
     "Given predictions get answers"
-    s_indices = np.argmax(s_prediction, axis=-1)
-    e_indices = np.argmax(e_prediction, axis=-1)
+    s_indices = s_prediction
+    e_indices = e_prediction
     answers = {}
     ids, contexts = batch['qid'], batch['c_tokens']
     for id, con, s, e in zip(ids,
                              contexts,
                              s_indices,
                              e_indices):
-        e = max(s, e)
+        s = int(s)
+        e = int(max(s, e))
         answers[id] = ' '.join([str(i) for i in con[s:e+1]])
     return answers
 

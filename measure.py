@@ -64,8 +64,8 @@ with tf.Session() as sess:
     saver.restore(sess, args.checkpoint)
     for batch in tqdm(dev_feed, total=dev_df.shape[0], desc='Predicting'):
         feed = {v: batch[k] for k, v in inp_dict.items()}
-        out = sess.run([out_dict['start_pred'],
-                        out_dict['end_pred']],
+        out = sess.run([out_dict['start_index'],
+                        out_dict['end_index']],
                        feed_dict=feed)
         ans = get_answer(out[0], out[1], batch)
         answers.update(ans)

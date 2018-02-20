@@ -41,7 +41,7 @@ def build(*, batch_size, max_c_len, max_q_len,
                                dtype=tf.int32)
     with tf.variable_scope("summaries"):
         inp = q_glove
-        for x in range(5):
+        for x in range(1):
             inp, q_s = birnn(inp, q_len, summary_dim,
                              'question_summary'+str(x))
         summaries = tf.concat(q_s, axis=-1)
@@ -50,7 +50,7 @@ def build(*, batch_size, max_c_len, max_q_len,
                             [1, max_c_len, 1])
     with tf.variable_scope("reasoning"):
         rep = tf.concat([c_glove, summaries, c_steps], axis=-1)
-        for x in range(5):
+        for x in range(1):
             rep, c_s = birnn(rep, c_len, summary_dim,
                              'context_reasoning'+str(x))
         understand = tf.concat(c_s, axis=-1)
@@ -62,11 +62,14 @@ def build(*, batch_size, max_c_len, max_q_len,
         end_pred = tf.nn.tanh(dense(end_pred, reasoning_dim, 'end2'))
         end_pred = tf.nn.sigmoid(dense(end_pred, 1, 'end'))
         # masks for pointers
+        start_index = tf.floor(start_pred * tf.cast(tf.expand_dims(c_len, axis=-1), tf.float32))
+        end_index = tf.floor(end_pred * tf.cast(tf.expand_dims(c_len, axis=-1), tf.float32))
     inp_dict = {"c_glove": c_glove, "q_glove": q_glove,
                 "start_exp": start_exp, "end_exp": end_exp,
                 'c_steps': c_steps,
                 "c_len": c_len, "q_len": q_len}
-    out_dict = {"start_pred": start_pred, "end_pred": end_pred}
+    out_dict = {"start_pred": start_pred, "end_pred": end_pred,
+                "start_index": start_index, "end_index": end_index}
     if build_trainer:
         with tf.variable_scope("trainer"):
             sl = tf.square((start_exp - start_pred))
