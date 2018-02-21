@@ -12,6 +12,7 @@ tensorboardx = "*"
 numpy = "*"
 spacy = "*"
 pandas = "*"
+tqdm = "*"
 
 
 [dev-packages]

@@ -116,7 +116,7 @@ def feed_gen(dataset, *, batch_size, glove,
 
 class Config:
     def __init__(self):
-        self.max_epochs = 5000
+        self.max_epochs = 8700
         self.train_steps = 50
         self.dev_steps = 50
         self.batch_size = 128

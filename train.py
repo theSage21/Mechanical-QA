@@ -3,6 +3,7 @@ import sys
 import argparse
 import numpy as np
 import tensorflow as tf
+from tqdm import trange
 from tensorboardX import SummaryWriter
 from toolkit import load_squad, load_glove
 
@@ -80,7 +81,7 @@ def run(to_run, steps, feeder, input_dict):
 saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    for epoch in range(config.max_epochs):
+    for epoch in trange(config.max_epochs, desc='Epochs'):
         print(epoch, end=' ')
         output = run([out_dict['loss'], out_dict['trainer']],
                      config.train_steps, train_feed, inp_dict)
